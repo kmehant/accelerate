@@ -57,6 +57,7 @@ from .utils import (
     DynamoBackend,
     FP8RecipeKwargs,
     FullyShardedDataParallelPlugin,
+    TorchTensorParallelPlugin,
     GradientAccumulationPlugin,
     GradScalerKwargs,
     InitProcessGroupKwargs,
@@ -185,6 +186,9 @@ class Accelerator:
         fsdp_plugin ([`~utils.FullyShardedDataParallelPlugin`], *optional*):
             Tweak your FSDP related args using this argument. This argument is optional and can be configured directly
             using *accelerate config*
+        torch_tp_plugin ([`~utils.TorchTensorParallelPlugin`], *optional*):
+            Tweak your torch tensor parallel. This argument is optional and can be configured directly
+            using *accelerate config*
         megatron_lm_plugin ([`~utils.MegatronLMPlugin`], *optional*):
             Tweak your MegatronLM related args using this argument. This argument is optional and can be configured
             directly using *accelerate config*
@@ -251,6 +255,7 @@ class Accelerator:
         dataloader_config: DataLoaderConfiguration | None = None,
         deepspeed_plugin: DeepSpeedPlugin | None = None,
         fsdp_plugin: FullyShardedDataParallelPlugin | None = None,
+        torch_tp_plugin: TorchTensorParallelPlugin | None = None,
         megatron_lm_plugin: MegatronLMPlugin | None = None,
         rng_types: list[str | RNGType] | None = None,
         log_with: str | LoggerType | GeneralTracker | list[str | LoggerType | GeneralTracker] | None = None,
@@ -387,6 +392,7 @@ class Accelerator:
             dynamo_plugin=dynamo_plugin,
             deepspeed_plugin=deepspeed_plugin,
             fsdp_plugin=fsdp_plugin,
+            torch_tp_plugin=torch_tp_plugin,
             megatron_lm_plugin=megatron_lm_plugin,
             _from_accelerator=True,
             **kwargs,
@@ -1452,6 +1458,10 @@ class Accelerator:
                     )
                     if self.ddp_handler is not None:
                         self.ddp_handler.register_comm_hook(model)
+            elif self.distributed_type == DistributedType.TP:
+                from torch.distributed.device_mesh import init_device_mesh
+                mesh_1d = init_device_mesh("cuda", (self.state.torch_tp_plugin.tp_size,), mesh_dim_names=("tp",))
+                model.apply_tensor_parallel(mesh_1d["tp"])
             elif self.distributed_type == DistributedType.FSDP:
                 # We need to fix the optimizer *before* sharding the model
                 from torch.distributed.fsdp.fully_sharded_data_parallel import FullyShardedDataParallel as FSDP
@@ -2344,6 +2354,9 @@ class Accelerator:
                     if parameters == [p for p in model.parameters()]:
                         return model.clip_grad_norm_(max_norm, norm_type)
         self.unscale_gradients()
+        print("grad norm info")
+        print(type(parameters))
+        print(type(max_norm))
         return torch.nn.utils.clip_grad_norm_(parameters, max_norm, norm_type=norm_type)
 
     def clip_grad_value_(self, parameters, clip_value):

@@ -56,6 +56,7 @@ from .dataclasses import (
     TensorInformation,
     TorchDynamoPlugin,
     add_model_config_to_megatron_parser,
+    TorchTensorParallelPlugin,
 )
 from .environment import (
     are_libraries_initialized,

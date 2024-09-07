@@ -769,6 +769,7 @@ class DataLoaderDispatcher(DataLoaderAdapter, DataLoaderStateMixin):
         broadcast_object_list(batch_info)
         self._stop_iteration = batch_info[1]
         if self._stop_iteration:
+            print("stop iteration triggered")
             # If drop_last is False and split_batches is False, we may have a remainder to take care of.
             if not self.split_batches and not self._drop_last:
                 if self.state.process_index == 0 and len(batches) > 0:
@@ -793,12 +794,18 @@ class DataLoaderDispatcher(DataLoaderAdapter, DataLoaderStateMixin):
         stop_iteration = False
         self._stop_iteration = False
         first_batch = None
+        print(f"base dataloader dataset {self.base_dataloader.dataset}")
+        print(f"main_iterator")
+        print(next(main_iterator))
         next_batch, next_batch_info = self._fetch_batches(main_iterator)
+        print(f"next_batch {next_batch} next_batch_info {next_batch_info}")
+        print(f"index: {self.state.process_index}")
         batch_index = 0
         while not stop_iteration:
             batch, batch_info = next_batch, next_batch_info
 
             if self.state.process_index != 0:
+                print("init tensors")
                 # Initialize tensors on other processes than process 0.
                 batch = initialize_tensors(batch_info[0])
             batch = send_to_device(batch, self.state.device, non_blocking=self._non_blocking)
@@ -1004,6 +1011,10 @@ def prepare_data_loader(
 
     </Tip>
     """
+    print(dataloader)
+    i = iter(dataloader)
+    print(next(i))
+    print(dataloader.dataset)
     if dispatch_batches is None:
         if not put_on_device:
             dispatch_batches = False
@@ -1112,12 +1123,16 @@ def prepare_data_loader(
 
     # Need to provide batch_size as batch_sampler is None for Iterable dataset
     if new_batch_sampler is None:
+        print("no new_batch_sampler")
         kwargs["drop_last"] = dataloader.drop_last
         kwargs["batch_size"] = (
             dataloader.batch_size // num_processes if split_batches and not dispatch_batches else dataloader.batch_size
         )
     if dispatch_batches:
         kwargs.pop("generator")
+        print("uses DataLoaderDispatcher")
+        print(new_dataset)
+        print(kwargs)
         dataloader = DataLoaderDispatcher(
             new_dataset,
             split_batches=split_batches,
@@ -1158,6 +1173,9 @@ def prepare_data_loader(
         dataloader.set_sampler(sampler)
     if state.distributed_type == DistributedType.XLA:
         return MpDeviceLoaderWrapper(dataloader, device)
+    i = iter(dataloader)
+    print(next(i))
+    print(dataloader)
     return dataloader
 
 

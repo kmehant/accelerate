@@ -555,6 +555,8 @@ class DistributedType(str, enum.Enum):
     MULTI_XPU = "MULTI_XPU"
     DEEPSPEED = "DEEPSPEED"
     FSDP = "FSDP"
+    TP = "TP"
+    FSDP_TP = "FSDP_TP"
     XLA = "XLA"
     MEGATRON_LM = "MEGATRON_LM"
     TPU = DeprecatedFieldDescriptor("TPU", "XLA")
@@ -1604,6 +1606,27 @@ class FullyShardedDataParallelPlugin:
                 )
             self.mixed_precision_policy = MixedPrecision(**self.mixed_precision_policy)
 
+@dataclass
+class TorchTensorParallelPlugin:
+    """
+    This plugin is used to enable tensor parallelism using PyTorch.
+    """
+
+    tp_size: int = field(
+        default=1,
+        metadata={
+            "help": "tensor parallel size will be used in the device mesh preparation"
+        },
+    )
+    # loss_parallel: bool = field(
+    #     default=True,
+    #     metadata={
+    #         "help": ""
+    #     },
+    # )
+
+    def __post_init__(self):
+        pass
 
 @dataclass
 class MegatronLMPlugin:
