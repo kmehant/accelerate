@@ -400,7 +400,6 @@ class Accelerator:
 
         if self.state.mixed_precision == "fp8" and self.fp8_recipe_handler is None:
             self.fp8_recipe_handler = FP8RecipeKwargs()
-
         self.delayed_fp8_autocast = False
         if self.fp8_recipe_handler is not None:
             # We already check if FP8 is available during `self.state`
@@ -1459,9 +1458,7 @@ class Accelerator:
                     if self.ddp_handler is not None:
                         self.ddp_handler.register_comm_hook(model)
             elif self.distributed_type == DistributedType.TP:
-                from torch.distributed.device_mesh import init_device_mesh
-                mesh_1d = init_device_mesh("cuda", (self.state.torch_tp_plugin.tp_size,), mesh_dim_names=("tp",))
-                model.apply_tensor_parallel(mesh_1d["tp"])
+                model.apply_tensor_parallel(self.state.torch_tp_plugin.torch_device_mesh["tp"])
             elif self.distributed_type == DistributedType.FSDP:
                 # We need to fix the optimizer *before* sharding the model
                 from torch.distributed.fsdp.fully_sharded_data_parallel import FullyShardedDataParallel as FSDP
@@ -2085,6 +2082,7 @@ class Accelerator:
             use_seedable_sampler=self.use_seedable_sampler,
             non_blocking=self.non_blocking,
             use_stateful_dataloader=self.use_stateful_dataloader,
+            torch_device_mesh=self.state.torch_tp_plugin.torch_device_mesh if self.state.torch_tp_plugin else None,
         )
         self._dataloaders.append(prepared_data_loader)
         return prepared_data_loader
@@ -2355,8 +2353,8 @@ class Accelerator:
                         return model.clip_grad_norm_(max_norm, norm_type)
         self.unscale_gradients()
         print("grad norm info")
-        print(type(parameters))
-        print(type(max_norm))
+        print(parameters)
+        print(max_norm)
         return torch.nn.utils.clip_grad_norm_(parameters, max_norm, norm_type=norm_type)
 
     def clip_grad_value_(self, parameters, clip_value):

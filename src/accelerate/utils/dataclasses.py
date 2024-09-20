@@ -1618,15 +1618,17 @@ class TorchTensorParallelPlugin:
             "help": "tensor parallel size will be used in the device mesh preparation"
         },
     )
-    # loss_parallel: bool = field(
-    #     default=True,
-    #     metadata={
-    #         "help": ""
-    #     },
-    # )
+    
+    # type has to be "torch.distributed.DeviceMesh"
+    torch_device_mesh: torch.distributed.DeviceMesh = field(
+        default=None
+    )
 
     def __post_init__(self):
-        pass
+        from torch.distributed.device_mesh import init_device_mesh
+        mesh_dim_name = "tp"
+        device = "cuda" # support for other devices has to be investigated
+        self.torch_device_mesh = init_device_mesh(device, (self.tp_size,), mesh_dim_names=(mesh_dim_name,))
 
 @dataclass
 class MegatronLMPlugin:
