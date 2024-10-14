@@ -2354,6 +2354,10 @@ class Accelerator:
         self.unscale_gradients()
         print("grad norm info")
         print(parameters)
+        types = set()
+        for p in parameters:
+            types.add(type(p))
+        print("types:", types)
         print(max_norm)
         return torch.nn.utils.clip_grad_norm_(parameters, max_norm, norm_type=norm_type)
 
