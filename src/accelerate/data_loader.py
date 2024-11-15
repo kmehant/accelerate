@@ -528,6 +528,7 @@ class DataLoaderShard(DataLoaderAdapter, DataLoaderStateMixin):
         use_stateful_dataloader=False,
         _drop_last: bool = False,
         _non_blocking: bool = False,
+        torch_device_mesh=None,
         **kwargs,
     ):
         super().__init__(dataset, use_stateful_dataloader=use_stateful_dataloader, **kwargs)
@@ -539,6 +540,17 @@ class DataLoaderShard(DataLoaderAdapter, DataLoaderStateMixin):
         self._drop_last = _drop_last
         self._non_blocking = _non_blocking
         self.iteration = 0
+        self.torch_device_mesh = torch_device_mesh
+        self.submesh_tp = None
+        self.submesh_dp = None
+        self.submesh_fsdp = None
+        if self.torch_device_mesh and "tp" in self.torch_device_mesh.mesh_dim_names:
+            # extract torch sub device mesh objects
+            self.submesh_tp = self.torch_device_mesh["tp"]
+            if "dp" in self.torch_device_mesh.mesh_dim_names:
+                self.submesh_dp = self.torch_device_mesh["dp"]
+            if "fsdp" in self.torch_device_mesh.mesh_dim_names:
+                self.submesh_fsdp = self.torch_device_mesh["fsdp"]
 
     def __iter__(self):
         if self.rng_types is not None:
@@ -738,18 +750,28 @@ class DataLoaderDispatcher(DataLoaderAdapter, DataLoaderStateMixin):
         self.slice_fn = slice_tensors if slice_fn is None else slice_fn
         self.iteration = 0
 
-        # if a device mesh is provided extract each dimension (tp and dp)
-        # device mesh will be used only if there is tp involved
-        # otherwise the default behavour should be sufficient
+        # if a device mesh is provided extract each dimension (dp, fsdp, tp)
+        # device mesh may hold any number of dimensions, however, 
+        # below code is for targetted support for dp, fsdp and tp
+        
+        # device mesh will be used only if there is tp involved 
+        # or any multi-dimensional parallelism involving tp 
+        # (dp, tp) (fsdp, tp) (dp, fsdp, tp)
+        # otherwise the default behavour not using device mesh should be sufficient
+        # since multi dimensional parallelism devoid of tp would anyway need
+        # different batches for each process irrespective of dp or fsdp
         self.submesh_tp = None
         self.submesh_dp = None
+        self.submesh_fsdp = None
         if self.torch_device_mesh and "tp" in self.torch_device_mesh.mesh_dim_names:
             # extract torch sub device mesh objects
             self.submesh_tp = self.torch_device_mesh["tp"]
             if "dp" in self.torch_device_mesh.mesh_dim_names:
                 self.submesh_dp = self.torch_device_mesh["dp"]
-        if self.submesh_tp and self.submesh_dp:
-            raise ValueError("TP + DDP / TP + FSDP is not yet supported")
+            if "fsdp" in self.torch_device_mesh.mesh_dim_names:
+                self.submesh_fsdp = self.torch_device_mesh["fsdp"]
+        if self.submesh_tp and (self.submesh_dp or self.submesh_fsdp):
+            raise ValueError("TP + (DP/FSDP) is not yet supported in dispatch mode")
 
     def _fetch_batches(self, iterator):
         batches, batch = None, None
@@ -766,6 +788,9 @@ class DataLoaderDispatcher(DataLoaderAdapter, DataLoaderStateMixin):
                 # duplicates of batches.
                 if self.split_batches:
                     # One batch of the main iterator is dispatched and split.
+                    if self.submesh_tp:
+                        logger.warning("Use of split_batches for TP would need the dataloader to produce duplicate batches,"
+                                       "otherwise, use dispatch_batches=True instead.")
                     self._update_state_dict()
                     batch = next(iterator)
                 else:
