@@ -740,11 +740,11 @@ class DataLoaderDispatcher(DataLoaderAdapter, DataLoaderStateMixin):
         self.iteration = 0
 
         # if a device mesh is provided extract each dimension (dp, fsdp, tp)
-        # device mesh may hold any number of dimensions, however, 
+        # device mesh may hold any number of dimensions, however,
         # below code is for targetted support for dp, fsdp and tp
-        
-        # device mesh will be used only if there is tp involved 
-        # or any multi-dimensional parallelism involving tp 
+
+        # device mesh will be used only if there is tp involved
+        # or any multi-dimensional parallelism involving tp
         # (dp, tp) (fsdp, tp) (dp, fsdp, tp)
         # otherwise the default behavour not using device mesh should be sufficient
         # since multi dimensional parallelism devoid of tp would anyway need
@@ -777,8 +777,10 @@ class DataLoaderDispatcher(DataLoaderAdapter, DataLoaderStateMixin):
                 if self.split_batches:
                     # One batch of the main iterator is dispatched and split.
                     if self.submesh_tp:
-                        logger.warning("Use of split_batches for TP would need the dataloader to produce duplicate batches,"
-                                       "otherwise, use dispatch_batches=True instead.")
+                        logger.warning(
+                            "Use of split_batches for TP would need the dataloader to produce duplicate batches,"
+                            "otherwise, use dispatch_batches=True instead."
+                        )
                     self._update_state_dict()
                     batch = next(iterator)
                 else:
@@ -1078,7 +1080,7 @@ def prepare_data_loader(
     state = PartialState()
     if num_processes is None:
         num_processes = state.num_processes
-    
+
     # when device mesh is used, specifically with TP
     # then there is need to update process_index and num_processes
     # to bring in the effect of generating same batch across TP ranks
@@ -1098,7 +1100,7 @@ def prepare_data_loader(
             submesh_dp_size = torch_device_mesh["dp"].size()
         if "fsdp" in torch_device_mesh.mesh_dim_names:
             submesh_fsdp_size = torch_device_mesh["fsdp"].size()
-    num_processes = (submesh_fsdp_size * submesh_dp_size)
+    num_processes = submesh_fsdp_size * submesh_dp_size
     if process_index is None:
         process_index = state.process_index
     if torch_device_mesh:
