@@ -562,6 +562,7 @@ class DataLoaderShard(DataLoaderAdapter, DataLoaderStateMixin):
         # We iterate one batch ahead to check when we are at the end
         try:
             current_batch = next(dataloader_iter)
+            print(current_batch)
         except StopIteration:
             yield
 
@@ -570,7 +571,9 @@ class DataLoaderShard(DataLoaderAdapter, DataLoaderStateMixin):
             try:
                 # But we still move it to the device so it is done before `StopIteration` is reached
                 if self.device is not None:
+                    print("before", current_batch)
                     current_batch = send_to_device(current_batch, self.device, non_blocking=self._non_blocking)
+                    print("after", current_batch)
                 self._update_state_dict()
                 next_batch = next(dataloader_iter)
                 if batch_index >= self.skip_batches:
