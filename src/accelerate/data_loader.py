@@ -537,6 +537,7 @@ class DataLoaderShard(DataLoaderAdapter, DataLoaderStateMixin):
         self.synchronized_generator = synchronized_generator
         self.skip_batches = skip_batches
         self.gradient_state = GradientState()
+        self.state = PartialState()
         self._drop_last = _drop_last
         self._non_blocking = _non_blocking
         self.iteration = 0
