@@ -1095,8 +1095,27 @@ def prepare_data_loader(
     state = PartialState()
     if num_processes is None:
         num_processes = state.num_processes
+        submesh_tp = None
+        submesh_dp = None
+        submesh_fsdp = None
+        submesh_fsdp_size = 1
+        submesh_dp_size = 1
+        submesh_tp_size = 1
+        if torch_device_mesh:
+            if "tp" in torch_device_mesh.mesh_dim_names:
+                submesh_tp = torch_device_mesh["tp"]
+                submesh_tp_size = submesh_tp.size()
+            if "dp" in torch_device_mesh.mesh_dim_names:
+                submesh_dp = torch_device_mesh["dp"]
+                submesh_dp_size = submesh_dp.size()
+            if "fsdp" in torch_device_mesh.mesh_dim_names:
+                submesh_fsdp = torch_device_mesh["fsdp"]
+                submesh_fsdp_size = submesh_fsdp.size()
+        num_processes = (submesh_fsdp_size * submesh_dp_size)
     if process_index is None:
         process_index = state.process_index
+        if torch_device_mesh:
+            process_index = process_index // submesh_tp_size
 
     # Sanity check
     if split_batches:
