@@ -341,7 +341,7 @@ def require_fsdp(test_case):
 
 def require_tp(test_case):
     """
-    Decorator marking a test that requires FSDP installed. These tests are skipped when FSDP isn't installed
+    Decorator marking a test that requires TP installed. These tests are skipped when TP isn't installed
     """
     return unittest.skipUnless(is_torch_version(">=", "2.3.0"), "test requires torch version >= 2.3.0")(test_case)
 
