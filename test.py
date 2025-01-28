@@ -1,6 +1,7 @@
 import torch
 from torch.utils.data import DataLoader
 
+from accelerate import Accelerator
 from accelerate.data_loader import prepare_data_loader
 from accelerate.state import AcceleratorState
 from accelerate.utils import (
@@ -8,6 +9,7 @@ from accelerate.utils import (
 )
 
 def dl_preparation_check():
+    accelerator = Accelerator()
     state = AcceleratorState()
     length = 32 * state.num_processes
 
