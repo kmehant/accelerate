@@ -2420,7 +2420,7 @@ class Accelerator:
             if not isinstance(p, torch.distributed.tensor.DTensor):
                 show.append(n)
         print(set(show))
-        return torch.nn.utils.clip_grad_norm_(parameters, max_norm, norm_type=norm_type)
+        return torch.nn.utils.clip_grad_norm_(parameters, max_norm, norm_type=norm_type, foreach=False)
 
     def clip_grad_value_(self, parameters, clip_value):
         """
