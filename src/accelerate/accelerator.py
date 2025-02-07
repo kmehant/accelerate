@@ -2415,12 +2415,17 @@ class Accelerator:
                     if parameters == [p for p in model.parameters()]:
                         return model.clip_grad_norm_(max_norm, norm_type)
         self.unscale_gradients()
-        show = []
-        for n,p in self._models[0].named_parameters():
-            if not isinstance(p, torch.distributed.tensor.DTensor):
-                show.append(n)
-        print(set(show))
-        return torch.nn.utils.clip_grad_norm_(parameters, max_norm, norm_type=norm_type, foreach=False)
+        # show = []
+        # for n,p in self._models[0].named_parameters():
+        #     if not isinstance(p, torch.distributed.tensor.DTensor):
+        #         show.append(n)
+        # print(set(show))
+        grad_norm = torch.nn.utils.clip_grad_norm_(parameters, max_norm, norm_type=norm_type, foreach=False)
+        print("grad norm type: ", type(grad_norm))
+        if isinstance(grad_norm, torch.distributed.tensor.DTensor):
+            grad_norm = grad_norm.to_local()
+        print("grad_norm", grad_norm.detach().item() if isinstance(grad_norm, torch.Tensor) else grad_norm)
+        return grad_norm
 
     def clip_grad_value_(self, parameters, clip_value):
         """
