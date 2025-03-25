@@ -1543,19 +1543,14 @@ class Accelerator:
                     if self.ddp_handler is not None:
                         self.ddp_handler.register_comm_hook(model)
             elif self.distributed_type == DistributedType.TP:
+                if not compare_versions("transformers", ">=", BETA_TP_AVAILABLE_TRANSFORMERS_VERSION):
+                    raise ValueError(f"TP requires transformers >= {BETA_TP_AVAILABLE_TRANSFORMERS_VERSION}")
                 if hasattr(model, "supports_tp_plan") and not model.supports_tp_plan:
-                    if not compare_versions("transformers", ">=", BETA_TP_AVAILABLE_TRANSFORMERS_VERSION):
-                        raise ValueError(f"TP requires transformers >= {BETA_TP_AVAILABLE_TRANSFORMERS_VERSION}")
                     raise NotImplementedError(
                         "Provided model does not support tensor parallelism. \
                         Tensor parallelism plan can be added as base_model_tp_plan to model config class \
                         and _tp_plan attribute to model class."
                     )
-                # For transformers>4.49, model should be TP sharded outside the trainer while loading using .from_pretrained(..., tp_plan="auto")
-                if compare_versions("transformers", ">=", BETA_TP_AVAILABLE_TRANSFORMERS_VERSION) and compare_versions(
-                    "transformers", "<=", "4.49.0"
-                ):
-                    model.tensor_parallel(self.state.torch_tp_plugin.torch_device_mesh["tp"])
             elif self.distributed_type == DistributedType.FSDP:
                 # We need to fix the optimizer *before* sharding the model
                 from torch.distributed.fsdp.fully_sharded_data_parallel import FullyShardedDataParallel as FSDP
