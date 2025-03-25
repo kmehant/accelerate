@@ -1870,11 +1870,7 @@ class TorchTensorParallelPlugin:
         metadata={"help": "tensor parallel size will be used in the device mesh preparation"},
     )
 
-    # torch_device_mesh is fo type "torch.distributed.DeviceMesh"
-    torch_device_mesh: Optional["torch.distributed.DeviceMesh"] = field(default=None)
-
     def __post_init__(self):
-        self.tp_size = self.tp_size if os.environ.get("TP_SIZE", "1") == "1" else int(os.environ.get("TP_SIZE", "1"))
         if self.tp_size == 1:
             raise ValueError("Provide TP degree > 1.")
 
@@ -1892,6 +1888,8 @@ class TorchTensorParallelPlugin:
 
         mesh_dim_name = "tp"
 
+        # device mesh is not used model sharding
+        # it is only used for preparing data loader
         self.torch_device_mesh = init_device_mesh(device, (self.tp_size,), mesh_dim_names=(mesh_dim_name,))
 
 

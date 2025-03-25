@@ -370,7 +370,7 @@ class Accelerator:
             if not is_torch_version(">=", FSDP_PYTORCH_VERSION):
                 raise ValueError(f"FSDP requires PyTorch >= {FSDP_PYTORCH_VERSION}")
 
-        if os.environ.get("ACCELERATE_USE_TP", "false") == "true" or isinstance(
+        if isinstance(
             torch_tp_plugin, TorchTensorParallelPlugin
         ):
             if not is_torch_version(">=", BETA_TP_AVAILABLE_PYTORCH_VERSION):
@@ -388,14 +388,9 @@ class Accelerator:
                 raise TypeError("`fsdp_plugin` must be a FullyShardedDataParallelPlugin object.")
             os.environ["ACCELERATE_USE_FSDP"] = "true"  # use FSDP if plugin is provided
 
-        if torch_tp_plugin is None:
-            torch_tp_plugin = (
-                TorchTensorParallelPlugin() if os.environ.get("ACCELERATE_USE_TP", "false") == "true" else None
-            )
-        else:
-            if not isinstance(torch_tp_plugin, TorchTensorParallelPlugin):
-                raise TypeError("`torch_tp_plugin` must be a TorchTensorParallelPlugin object.")
-            os.environ["ACCELERATE_USE_TP"] = "true"
+
+        if torch_tp_plugin is not None and not isinstance(torch_tp_plugin, TorchTensorParallelPlugin):
+            raise TypeError("`torch_tp_plugin` must be a TorchTensorParallelPlugin object.")
 
         if megatron_lm_plugin is None:  # init from env variables
             megatron_lm_plugin = (
@@ -2157,8 +2152,7 @@ class Accelerator:
             return self.state.torch_tp_plugin.torch_device_mesh
         elif self.distributed_type == DistributedType.DEEPSPEED and hasattr(self.state, "ds_device_mesh"):
             return self.state.ds_device_mesh
-        else:
-            return None
+        return None
 
     def _prepare_msamp(self, *args, device_placement):
         if not is_msamp_available():
