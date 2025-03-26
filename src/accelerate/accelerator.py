@@ -370,9 +370,7 @@ class Accelerator:
             if not is_torch_version(">=", FSDP_PYTORCH_VERSION):
                 raise ValueError(f"FSDP requires PyTorch >= {FSDP_PYTORCH_VERSION}")
 
-        if isinstance(
-            torch_tp_plugin, TorchTensorParallelPlugin
-        ):
+        if isinstance(torch_tp_plugin, TorchTensorParallelPlugin):
             if not is_torch_version(">=", BETA_TP_AVAILABLE_PYTORCH_VERSION):
                 raise ValueError(f"TP requires PyTorch >= {BETA_TP_AVAILABLE_PYTORCH_VERSION}")
 
@@ -387,7 +385,6 @@ class Accelerator:
             if not isinstance(fsdp_plugin, FullyShardedDataParallelPlugin):
                 raise TypeError("`fsdp_plugin` must be a FullyShardedDataParallelPlugin object.")
             os.environ["ACCELERATE_USE_FSDP"] = "true"  # use FSDP if plugin is provided
-
 
         if torch_tp_plugin is not None and not isinstance(torch_tp_plugin, TorchTensorParallelPlugin):
             raise TypeError("`torch_tp_plugin` must be a TorchTensorParallelPlugin object.")

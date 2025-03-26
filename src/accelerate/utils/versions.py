@@ -39,7 +39,7 @@ def compare_versions(library_or_version: Union[str, Version], operation: str, re
         raise ValueError(f"`operation` must be one of {list(STR_OPERATION_TO_FUNC.keys())}, received {operation}")
     operation = STR_OPERATION_TO_FUNC[operation]
     if isinstance(library_or_version, str):
-        library_or_version = parse(importlib.metadata.version(library_or_version).split(".dev")[0])
+        library_or_version = parse(importlib.metadata.version(library_or_version))
     return operation(library_or_version, parse(requirement_version))
 
 
