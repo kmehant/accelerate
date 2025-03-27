@@ -393,6 +393,7 @@ class Accelerator:
             os.environ["ACCELERATE_USE_FSDP"] = "true"  # use FSDP if plugin is provided
 
         if fsdp_plugin is not None and fsdp_plugin.fsdp_version == 2:
+            print("entered")
             if not is_torch_version(">=", FSDP2_PYTORCH_VERSION):
                 raise ImportError(f"FSDP2 requires PyTorch >= {FSDP2_PYTORCH_VERSION}")
 
