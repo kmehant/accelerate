@@ -2579,7 +2579,7 @@ class Accelerator:
             parameters = [p for p in parameters]
             for model in self._models:
                 if parameters == [p for p in model.parameters()]:
-                    if self.fsdp_version == 1:
+                    if self.state.fsdp_plugin.fsdp_version == 1:
                         return model.clip_grad_norm_(max_norm, norm_type)
                     else:
                         return torch.nn.utils.clip_grad_norm_(
