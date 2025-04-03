@@ -457,8 +457,10 @@ def fsdp2_load_full_state_dict(accelerator, model: torch.nn.Module, full_sd: dic
 
     model.load_state_dict(sharded_sd)
     devs = set()
-    for param in model.parameters():
-        devs.add(param.device)
+    for name, param in model.named_parameters():
+        if param.device.type == "meta":
+            print(name)
+        devs.add(param.device.type)
     print("devs", devs)
 
 def fsdp2_switch_optimizer_parameters(optimizer: torch.optim.Optimizer, mapping: dict):
