@@ -439,7 +439,6 @@ def fsdp2_load_full_state_dict(accelerator, model: torch.nn.Module, full_sd: dic
     """
     import torch.distributed as dist
     from torch.distributed.tensor import distribute_tensor
-    print("entered fsdp2_load_full_state_dict")
     sharded_sd = model.state_dict()
     if accelerator.is_main_process:
         for (param_name, full_param), sharded_param in zip(full_sd.items(), sharded_sd.values()):
@@ -457,9 +456,10 @@ def fsdp2_load_full_state_dict(accelerator, model: torch.nn.Module, full_sd: dic
             sharded_sd[param_name] = sharded_tensor
 
     model.load_state_dict(sharded_sd)
+    devs = set()
     for param in model.parameters():
-        if param.device == "meta":
-            print("device", param.device)
+        devs.add(param.device)
+    print("devs", devs)
 
 def fsdp2_switch_optimizer_parameters(optimizer: torch.optim.Optimizer, mapping: dict):
     """
@@ -555,7 +555,6 @@ def fsdp2_prepare_model(accelerator, model: torch.nn.Module) -> torch.nn.Module:
                 fully_shard(module, **fsdp2_kwargs)
 
     fully_shard(model, **fsdp2_kwargs)
-    print(fsdp2_plugin.cpu_ram_efficient_loading)
     if fsdp2_plugin.cpu_ram_efficient_loading:
         # If `cpu_ram_efficient_loading` is enabled, only rank 0 loads the weights
         # Other ranks have an empty model on `meta` device, so we need to distribute the weights properly
