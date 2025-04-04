@@ -458,7 +458,10 @@ def fsdp2_load_full_state_dict(accelerator, model: torch.nn.Module, full_sd: dic
             if sharded_tensor.device.type == "meta":
                 print("meta1:", param_name)
             sharded_sd[param_name] = sharded_tensor
-
+    devs = set()
+    for k,v in sharded_sd.items():
+        devs.add(v.device.type)
+    print("sd devs", devs)
     model.load_state_dict(sharded_sd)
     devs = set()
     for name, param in model.named_parameters():
