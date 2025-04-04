@@ -454,7 +454,7 @@ def fsdp2_load_full_state_dict(accelerator, model: torch.nn.Module, full_sd: dic
             dist.broadcast(full_tensor, src=0, group=mesh.get_group())
             sharded_tensor = distribute_tensor(full_tensor, mesh, sharded_param.placements)
             if sharded_tensor.device.type == "meta":
-                print("meta1:",param_name)
+                print("meta1:", param_name)
             sharded_sd[param_name] = sharded_tensor
 
     model.load_state_dict(sharded_sd)
