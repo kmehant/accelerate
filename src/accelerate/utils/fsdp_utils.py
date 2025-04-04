@@ -460,6 +460,8 @@ def fsdp2_load_full_state_dict(accelerator, model: torch.nn.Module, full_sd: dic
             sharded_sd[param_name] = sharded_tensor
     devs = set()
     for k,v in sharded_sd.items():
+        if "block_sparse_moe" in k:
+            print("present",  k)
         devs.add(v.device.type)
     print("sd devs", devs)
     model.load_state_dict(sharded_sd)
