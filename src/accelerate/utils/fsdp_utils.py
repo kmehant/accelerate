@@ -465,6 +465,7 @@ def fsdp2_load_full_state_dict(accelerator, model: torch.nn.Module, full_sd: dic
         devs.add(v.device.type)
     print("sd devs", devs)
     model.load_state_dict(sharded_sd)
+    print(model._parameters)
     for name, param in model.named_parameters():
         if param.device.type == "meta":
             print("meta nam", name)
