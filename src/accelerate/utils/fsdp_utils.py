@@ -533,7 +533,7 @@ def fsdp2_prepare_model(accelerator, model: torch.nn.Module) -> torch.nn.Module:
             model,
             checkpoint_wrapper_fn=functools.partial(
                 checkpoint_wrapper,
-                checkpoint_impl=CheckpointImpl.NO_REENTRANT,
+                checkpoint_impl=CheckpointImpl.REENTRANT,
             ),
             auto_wrap_policy=fsdp2_plugin.auto_wrap_policy,
         )
