@@ -550,6 +550,7 @@ def fsdp2_prepare_model(accelerator, model: torch.nn.Module) -> torch.nn.Module:
         # We skip the model itself, as that one is always wrapped
         for module in get_module_children_bottom_up(model)[:-1]:
             if auto_wrap_policy(module):
+                print("wrapping", module)
                 fully_shard(module, **fsdp2_kwargs)
 
     fully_shard(model, **fsdp2_kwargs)
@@ -602,7 +603,6 @@ def fsdp2_prepare_auto_wrap_policy(
             if transformer_cls is None:
                 raise ValueError(f"Could not find the transformer layer class {layer_class} in the model.")
             transformer_cls_to_wrap.add(transformer_cls)
-
         def policy(module: torch.nn.Module) -> bool:
             if fsdp2_plugin.transformer_cls_names_to_wrap is None:
                 return False
