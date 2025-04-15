@@ -440,16 +440,17 @@ def fsdp2_load_full_state_dict(accelerator, model: torch.nn.Module, full_sd: dic
     import torch.distributed as dist
     from torch.distributed.tensor import distribute_tensor
 
-    sharded_sd = model.state_dict()
+    meta_sharded_sd = model.state_dict()
+    sharded_sd = {}
     if accelerator.is_main_process:
-        for (param_name, full_param), sharded_param in zip(full_sd.items(), sharded_sd.values()):
+        for (param_name, full_param), sharded_param in zip(full_sd.items(), meta_sharded_sd.values()):
             full_param = full_param.detach().cuda()
             mesh = sharded_param.device_mesh
             dist.broadcast(full_param, src=0, group=mesh.get_group())
             sharded_tensor = distribute_tensor(full_param, mesh, sharded_param.placements)
             sharded_sd[param_name] = sharded_tensor
     else:
-        for param_name, sharded_param in sharded_sd.items():
+        for param_name, sharded_param in meta_sharded_sd.items():
             full_tensor = torch.empty(sharded_param.size(), device="cuda", dtype=sharded_param.dtype)
             mesh = sharded_param.device_mesh
             dist.broadcast(full_tensor, src=0, group=mesh.get_group())
