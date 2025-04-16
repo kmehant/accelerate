@@ -604,7 +604,7 @@ def fsdp2_prepare_auto_wrap_policy(
             transformer_cls_to_wrap.add(transformer_cls)
 
         def policy(module: torch.nn.Module) -> bool:
-            if fsdp2_plugin.transformer_cls_names_to_wrap is None:
+            if len(transformer_cls_names_to_wrap) == 0:
                 return False
             return isinstance(module, tuple(transformer_cls_to_wrap))
 
