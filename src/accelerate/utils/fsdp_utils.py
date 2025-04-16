@@ -590,12 +590,17 @@ def fsdp2_prepare_auto_wrap_policy(
             The auto wrap policy function to be applied to the model
     """
     if auto_wrap_policy_type == "transformer":
-        no_split_modules = model._no_split_modules
-        if no_split_modules is None:
-            no_split_modules = []
-        transformer_cls_names_to_wrap = list(no_split_modules)
+        # give priority to model's no_split_modules over user passed
+        # transformer_cls_names_to_wrap
+        # user passed transformer_cls_names_to_wrap  would be given priority
+        # for activations checkpointing.
         if fsdp2_plugin.transformer_cls_names_to_wrap is not None:
             transformer_cls_names_to_wrap = fsdp2_plugin.transformer_cls_names_to_wrap
+        no_split_modules = model._no_split_modules
+        if no_split_modules is not None:
+            transformer_cls_names_to_wrap = list(no_split_modules)
+        if transformer_cls_names_to_wrap is None:
+            transformer_cls_names_to_wrap = []
         transformer_cls_to_wrap = set()
 
         for layer_class in transformer_cls_names_to_wrap:
@@ -604,7 +609,7 @@ def fsdp2_prepare_auto_wrap_policy(
                 raise ValueError(f"Could not find the transformer layer class {layer_class} in the model.")
             transformer_cls_to_wrap.add(transformer_cls)
         def policy(module: torch.nn.Module) -> bool:
-            if fsdp2_plugin.transformer_cls_names_to_wrap is None:
+            if len(transformer_cls_names_to_wrap) == 0:
                 return False
             return isinstance(module, tuple(transformer_cls_to_wrap))
 
