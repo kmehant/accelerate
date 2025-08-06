@@ -177,6 +177,8 @@ class PartialState:
 
     def __init__(self, cpu: bool = False, **kwargs):
         self.__dict__ = self._shared_state
+        if hasattr(kwargs, "parallelism_config") and kwargs["parallelism_config"] is not None:
+            self.parallelism_config = kwargs["parallelism_config"]
         if not self.initialized:
             self._cpu = cpu
             self.backend = None
