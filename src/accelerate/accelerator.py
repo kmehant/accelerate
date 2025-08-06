@@ -464,13 +464,12 @@ class Accelerator:
             _from_accelerator=True,
             **kwargs,
         )
-        
-        print("self.state.parallelism_config", self.state.parallelism_config)
 
         if self.parallelism_config:
             self._build_torch_device_mesh(self.parallelism_config)
             self.parallelism_config._validate_accelerator(self)
 
+        print("self.state.parallelism_config", self.state.parallelism_config)
         self.fp8_enabled = self.state.mixed_precision == "fp8" or mixed_precision == "fp8"
 
         # Check for automatic FP8 recipe creation
