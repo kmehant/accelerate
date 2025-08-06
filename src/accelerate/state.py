@@ -909,8 +909,10 @@ class AcceleratorState:
         self.__dict__ = self._shared_state
         if parse_flag_from_env("ACCELERATE_USE_CPU"):
             cpu = True
+        print("PartialState._shared_state 1", PartialState._shared_state)
         if PartialState._shared_state == {}:
             PartialState(cpu, **kwargs)
+        print("PartialState._shared_state 2", PartialState._shared_state)
         self.__dict__.update(PartialState._shared_state)
         print(self.__dict__)
         self._check_initialized(mixed_precision, cpu)
