@@ -780,12 +780,12 @@ class Accelerator:
         self, parallelism_config: ParallelismConfig | None, torch_tp_plugin: TorchTensorParallelPlugin | None
     ):
         if parallelism_config is None:
-            if PartialState._shared_state != {} and PartialState.parallelism_config is not None:
+            if PartialState._shared_state != {} and PartialState._shared_state.parallelism_config is not None:
                 if os.environ.get("ACCELERATE_USE_PARALLELISM_CONFIG", "false") == "true":
                     raise ValueError(
                         "Partial state contains a `parallelism_config` which is not None, but you configured `parallelism_config` from the `accelerate launch` CLI. We don't know which to use, please remove one of those configuration methods."
                     )
-                parallelism_config = PartialState.parallelism_config
+                parallelism_config = PartialState._shared_state.parallelism_config
             else:
                 # TODO: Remove after deprecating tp_plugin
                 tp_size = 1 if torch_tp_plugin is None else torch_tp_plugin.tp_size
