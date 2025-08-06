@@ -917,7 +917,10 @@ class AcceleratorState:
             self.deepspeed_plugins = None
             self.use_ipex = None
             self.torch_tp_plugin = torch_tp_plugin
-            self.parallelism_config = kwargs.pop("parallelism_config", None)
+            if not hasattr(self, "parallelism_config"):
+                self.parallelism_config = kwargs.pop("parallelism_config", None)
+            if self.parallelism_config is None:
+                self.parallelism_config = kwargs.pop("parallelism_config", None)
             mixed_precision = (
                 parse_choice_from_env("ACCELERATE_MIXED_PRECISION", "no")
                 if mixed_precision is None
