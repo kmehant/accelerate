@@ -1649,27 +1649,28 @@ class Accelerator:
         result = [
             self._prepare_one(obj, first_pass=True) if not isinstance(obj, torch.nn.Module) else obj for obj in args
         ]
-
+        print("first pass in prepare self.parallelism_config", self.parallelism_config)
         # Second pass: prepare schedulers
         result = [self._prepare_one(obj) if not isinstance(obj, torch.nn.Module) else obj for obj in result]
-
+        print("second pass in prepare self.parallelism_config", self.parallelism_config)
         # Prepare the model
         model_index, model = None, None
         for i, obj in enumerate(result):
             if isinstance(obj, torch.nn.Module):
                 model_index, model = i, obj
 
+        print("prepare model in prepare self.parallelism_config", self.parallelism_config)
         # Invariant: if we have a model, we also have an optimizer (checked in `prepare`)
         if model_index is None:
             return tuple(result)
 
         # Needs to be done first, to make sure AC + fully_shard will work as expected
         self.state.fsdp_plugin.set_auto_wrap_policy(model)
-
+        print("prepare state fsdp plugin in prepare self.parallelism_config", self.parallelism_config)
         # Apply AC if needed
         if self.state.fsdp_plugin.activation_checkpointing:
             model = fsdp2_apply_ac(self, model)
-
+        print("fsdp ac in prepare self.parallelism_config", self.parallelism_config)
         # Apply compile if needed, has to be *after* applying AC
         # Copied from: `accelerator.prepare_model` ~ L1804
         if self.state.dynamo_plugin.backend != DynamoBackend.NO and not is_compiled_module(model):
