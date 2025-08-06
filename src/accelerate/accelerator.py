@@ -780,6 +780,7 @@ class Accelerator:
         self, parallelism_config: ParallelismConfig | None, torch_tp_plugin: TorchTensorParallelPlugin | None
     ):
         if parallelism_config is None:
+            print("PartialState in setup", PartialState._shared_state)
             if PartialState._shared_state != {} and PartialState().parallelism_config is not None:
                 if os.environ.get("ACCELERATE_USE_PARALLELISM_CONFIG", "false") == "true":
                     raise ValueError(
