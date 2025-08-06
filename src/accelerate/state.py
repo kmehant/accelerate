@@ -909,7 +909,7 @@ class AcceleratorState:
         self.__dict__ = self._shared_state
         if parse_flag_from_env("ACCELERATE_USE_CPU"):
             cpu = True
-        if PartialState._shared_state == {}:
+        if PartialState._shared_state == {} or (hasattr(kwargs, "parallelism_config") and kwargs["parallelism_config"] is not None):
             PartialState(cpu, **kwargs)
         self.__dict__.update(PartialState._shared_state)
         self._check_initialized(mixed_precision, cpu)
@@ -917,10 +917,10 @@ class AcceleratorState:
             self.deepspeed_plugins = None
             self.use_ipex = None
             self.torch_tp_plugin = torch_tp_plugin
-            if not hasattr(self, "parallelism_config"):
-                self.parallelism_config = kwargs.pop("parallelism_config", None)
-            if self.parallelism_config is None:
-                self.parallelism_config = kwargs.pop("parallelism_config", None)
+            # if not hasattr(self, "parallelism_config"):
+            #     self.parallelism_config = kwargs.pop("parallelism_config", None)
+            # if self.parallelism_config is None:
+            #     self.parallelism_config = kwargs.pop("parallelism_config", None)
             mixed_precision = (
                 parse_choice_from_env("ACCELERATE_MIXED_PRECISION", "no")
                 if mixed_precision is None
