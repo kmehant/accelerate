@@ -790,7 +790,7 @@ class Accelerator:
                 # TODO: Remove after deprecating tp_plugin
                 tp_size = 1 if torch_tp_plugin is None else torch_tp_plugin.tp_size
                 parallelism_config = ParallelismConfig(tp_size=tp_size)
-
+        print("parallelism_config", parallelism_config)
         return parallelism_config
 
     @property
