@@ -1566,7 +1566,6 @@ class Accelerator:
         elif self.distributed_type == DistributedType.MEGATRON_LM:
             result = self._prepare_megatron_lm(*args)
         elif self.is_fsdp2:
-            print("before prepare fsdp", self.parallelism_config)
             result = self._prepare_fsdp2(*args)
         else:
             if self.fp8_backend == FP8BackendType.MSAMP:
@@ -1646,6 +1645,7 @@ class Accelerator:
         return args
 
     def _prepare_fsdp2(self, *args):
+        print("before prepare one", self.parallelism_config)
         # First pass: prepare everything except schedulers (and model, which is prepared separately below)
         result = [
             self._prepare_one(obj, first_pass=True) if not isinstance(obj, torch.nn.Module) else obj for obj in args
