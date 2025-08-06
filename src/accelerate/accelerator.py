@@ -1411,11 +1411,19 @@ class Accelerator:
         # First pass of preparation: DataLoader, model, optimizer
         if first_pass:
             if isinstance(obj, torch.utils.data.DataLoader):
-                return self.prepare_data_loader(obj, device_placement=device_placement)
+                print("before prepare_data_loader", self.parallelism_config)
+                d = self.prepare_data_loader(obj, device_placement=device_placement)
+                print("after prepare_data_loader", self.parallelism_config)
+                return d
             elif isinstance(obj, torch.nn.Module):
-                return self.prepare_model(obj, device_placement=device_placement)
+                print("before prepare_model", self.parallelism_config)
+                d  = self.prepare_model(obj, device_placement=device_placement)
+                print("after prepare_data_loader", self.parallelism_config)
+                return d
             elif isinstance(obj, torch.optim.Optimizer):
+                print("before prepare_optimizer", self.parallelism_config)
                 optimizer = self.prepare_optimizer(obj, device_placement=device_placement)
+                print("after prepare_data_loader", self.parallelism_config)
                 return optimizer
         # Second pass of preparation: LR scheduler (which need the full list of optimizers)
         elif isinstance(obj, LRScheduler):
@@ -1645,7 +1653,6 @@ class Accelerator:
         return args
 
     def _prepare_fsdp2(self, *args):
-        print("before prepare one", self.parallelism_config)
         # First pass: prepare everything except schedulers (and model, which is prepared separately below)
         result = [
             self._prepare_one(obj, first_pass=True) if not isinstance(obj, torch.nn.Module) else obj for obj in args
