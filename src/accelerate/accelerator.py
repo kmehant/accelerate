@@ -464,6 +464,8 @@ class Accelerator:
             _from_accelerator=True,
             **kwargs,
         )
+        
+        print("self.state.parallelism_config", self.state.parallelism_config)
 
         if self.parallelism_config:
             self._build_torch_device_mesh(self.parallelism_config)
