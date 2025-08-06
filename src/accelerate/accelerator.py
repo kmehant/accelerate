@@ -1646,7 +1646,6 @@ class Accelerator:
 
     def _prepare_fsdp2(self, *args):
         # First pass: prepare everything except schedulers (and model, which is prepared separately below)
-        print("in prepare self.parallelism_config", self.parallelism_config)
         result = [
             self._prepare_one(obj, first_pass=True) if not isinstance(obj, torch.nn.Module) else obj for obj in args
         ]
@@ -1698,6 +1697,7 @@ class Accelerator:
 
         self._models.append(model)
 
+        print("in prepare self.parallelism_config", self.parallelism_config)
         # Prepare everything FSDP2 related for the model (except AC)
         model = fsdp2_prepare_model(self, model)
 
