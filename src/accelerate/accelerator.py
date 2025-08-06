@@ -2682,6 +2682,8 @@ class Accelerator:
         # NOTE: Special case with MS-AMP we do *not* pass in the scaler explicitly to the `AcceleratedOptimizer`,
         # Their optimizer handles it for us.
         scaler = None if self.fp8_backend == FP8BackendType.MSAMP else self.scaler
+        print("from self", self.parallelism_config)
+        print("from object creation", AcceleratorState().parallelism_config)
         optimizer = AcceleratedOptimizer(optimizer, device_placement=device_placement, scaler=scaler)
         self._optimizers.append(optimizer)
         return optimizer
