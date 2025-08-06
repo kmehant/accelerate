@@ -469,7 +469,6 @@ class Accelerator:
             self._build_torch_device_mesh(self.parallelism_config)
             self.parallelism_config._validate_accelerator(self)
 
-        print("self.state.parallelism_config", self.state.parallelism_config)
         self.fp8_enabled = self.state.mixed_precision == "fp8" or mixed_precision == "fp8"
 
         # Check for automatic FP8 recipe creation
@@ -1647,6 +1646,7 @@ class Accelerator:
 
     def _prepare_fsdp2(self, *args):
         # First pass: prepare everything except schedulers (and model, which is prepared separately below)
+        print("in prepare self.parallelism_config", self.parallelism_config)
         result = [
             self._prepare_one(obj, first_pass=True) if not isinstance(obj, torch.nn.Module) else obj for obj in args
         ]
