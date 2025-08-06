@@ -912,6 +912,7 @@ class AcceleratorState:
         if PartialState._shared_state == {}:
             PartialState(cpu, **kwargs)
         self.__dict__.update(PartialState._shared_state)
+        print(self.__dict__)
         self._check_initialized(mixed_precision, cpu)
         if not self.initialized:
             self.deepspeed_plugins = None
