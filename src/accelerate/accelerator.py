@@ -450,7 +450,7 @@ class Accelerator:
                 setattr(self, handler_attr, handler)
                 if "recipe_handler" in handler_attr and not self.has_fp8_handler:
                     self.has_fp8_handler = True
-
+        print("first PartialState._shared_state", PartialState._shared_state)
         parallelism_config = self._setup_parallelism_config(parallelism_config, torch_tp_plugin)
 
         kwargs = self.init_handler.to_kwargs() if self.init_handler is not None else {}
