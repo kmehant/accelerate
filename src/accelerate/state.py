@@ -177,8 +177,8 @@ class PartialState:
 
     def __init__(self, cpu: bool = False, **kwargs):
         self.__dict__ = self._shared_state
-        print(hasattr(kwargs, "parallelism_config"))
-        if hasattr(kwargs, "parallelism_config") and kwargs["parallelism_config"] is not None:
+        print("parallelism_config" in kwargs)
+        if "parallelism_config" in kwargs and kwargs["parallelism_config"] is not None:
             self.parallelism_config = kwargs["parallelism_config"]
         if not self.initialized:
             self._cpu = cpu
@@ -912,8 +912,8 @@ class AcceleratorState:
         self.__dict__ = self._shared_state
         if parse_flag_from_env("ACCELERATE_USE_CPU"):
             cpu = True
-        print(hasattr(kwargs, "parallelism_config"))
-        if PartialState._shared_state == {} or (hasattr(kwargs, "parallelism_config") and kwargs["parallelism_config"] is not None):
+        print("accel state", "parallelism_config" in kwargs)
+        if PartialState._shared_state == {} or ("parallelism_config" in kwargs and kwargs["parallelism_config"] is not None):
             print("called")
             PartialState(cpu, **kwargs)
         self.__dict__.update(PartialState._shared_state)
