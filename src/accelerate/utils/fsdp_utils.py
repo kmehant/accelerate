@@ -800,28 +800,20 @@ def fsdp2_canonicalize_names(named_params: dict) -> dict:
     named_params = {k.replace("._orig_mod", ""): v for k, v in named_params.items()}
     return named_params
 
-<<<<<<< HEAD
 
 def get_parameters_from_modules(
     modules: Union[Iterable[torch.nn.Module], str], model, device
 ) -> set[torch.nn.Parameter]:
     """Converts modules to parameters where modules can be a string or list of torch.nn.Module
 
-=======
-def get_parameters_from_modules(modules: Union[Iterable[torch.nn.Module], str], model, device) -> List[torch.nn.Parameter]:
-    """Converts modules to parameters where modules can be a string or list of torch.nn.Module
->>>>>>> befb7270 (feat: add ignored_params support for fsdp2)
     Args:
         modules (`Union[Iterable[torch.nn.Module], str]`): List of modules
 
     Returns:
         `List[torch.nn.Parameter]`: List of parameters
     """
-<<<<<<< HEAD
     if modules is None:
         return None
-=======
->>>>>>> befb7270 (feat: add ignored_params support for fsdp2)
     parameters = []
     # code taken from accelerate while preparing kwargs for FSDP
     if isinstance(modules, str):
@@ -834,8 +826,4 @@ def get_parameters_from_modules(modules: Union[Iterable[torch.nn.Module], str], 
         modules = mapped_modules
     for module in modules:
         parameters.extend(list(module.parameters()))
-<<<<<<< HEAD
     return set(parameters)
-=======
-    return parameters
->>>>>>> befb7270 (feat: add ignored_params support for fsdp2)
