@@ -672,7 +672,9 @@ def fsdp2_prepare_model(accelerator, model: torch.nn.Module) -> torch.nn.Module:
         # We skip the model itself, as that one is always wrapped
         for module in get_module_children_bottom_up(model)[:-1]:
             if auto_wrap_policy_func(module) and not isinstance(module, FSDPModule):
+                print("wrapping:", module)
                 fully_shard(module, **fsdp2_kwargs)
+                print("wrapped done:", module)
 
     if not isinstance(model, FSDPModule):
         fully_shard(model, **fsdp2_kwargs)
