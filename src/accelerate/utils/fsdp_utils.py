@@ -502,7 +502,7 @@ def fsdp2_load_full_state_dict(accelerator, model: torch.nn.Module, full_sd: dic
         if to_contiguous:
             tensor = tensor.contiguous()
         return tensor
-    ignored_params = get_parameters_from_modules(accelerator.state.fsdp_plugin.ignored_modules)
+    ignored_params = get_parameters_from_modules(accelerator.state.fsdp_plugin.ignored_modules, model, accelerator.device)
     if accelerator.is_main_process:
         for (param_name, full_param), sharded_param in zip(full_sd.items(), meta_sharded_sd.values()):
             if torch.nn.Parameter(sharded_param) in ignored_params:
