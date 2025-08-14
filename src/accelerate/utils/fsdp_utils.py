@@ -671,6 +671,7 @@ def fsdp2_prepare_model(accelerator, model: torch.nn.Module) -> torch.nn.Module:
         with torch.no_grad():
             for param in model.parameters():
                 if param not in fsdp2_kwargs["ignored_params"]:
+                    print(param.device)
                     param.data = param.data.to(torch.device("meta"))
         # model = model.to(torch.device("meta"))
         # We need to re-tie the weights, not exactly sure why, but if we don't do this, reference to `lm_head/embed_tokens` stay hanging -> more VRAM usage
