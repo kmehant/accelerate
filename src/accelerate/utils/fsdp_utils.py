@@ -502,34 +502,40 @@ def fsdp2_load_full_state_dict(accelerator, model: torch.nn.Module, full_sd: dic
         if to_contiguous:
             tensor = tensor.contiguous()
         return tensor
-
+    ignored_params = get_parameters_from_modules(accelerator.state.fsdp_plugin.ignored_modules)
     if accelerator.is_main_process:
         for (param_name, full_param), sharded_param in zip(full_sd.items(), meta_sharded_sd.values()):
-            device_mesh = sharded_param.device_mesh
-            full_param = full_param.detach().to(device_mesh.device_type)
-            dist.broadcast(full_param, src=0, group=dist.group.WORLD)
-            sharded_tensor = distribute_tensor(full_param, device_mesh, sharded_param.placements)
-            to_contiguous, casting_dtype = _infer_parameter_dtype(
-                model,
-                param_name,
-                full_param,
-            )
-            sharded_tensor = _cast_and_contiguous(sharded_tensor, to_contiguous, casting_dtype)
-            sharded_sd[param_name] = sharded_tensor
+            if torch.nn.Parameter(sharded_param) in ignored_params:
+                sharded_sd[param_name] = sharded_param
+            else:
+                device_mesh = sharded_param.device_mesh
+                full_param = full_param.detach().to(device_mesh.device_type)
+                dist.broadcast(full_param, src=0, group=device_mesh.get_group())
+                sharded_tensor = distribute_tensor(full_param, device_mesh, sharded_param.placements)
+                to_contiguous, casting_dtype = _infer_parameter_dtype(
+                    model,
+                    param_name,
+                    full_param,
+                )
+                sharded_tensor = _cast_and_contiguous(sharded_tensor, to_contiguous, casting_dtype)
+                sharded_sd[param_name] = sharded_tensor
     # We need this else to have a matching `broadcast` for all of the ranks, else we deadlock
     else:
         for param_name, sharded_param in meta_sharded_sd.items():
-            device_mesh = sharded_param.device_mesh
-            full_tensor = torch.empty(sharded_param.size(), device=device_mesh.device_type, dtype=sharded_param.dtype)
-            dist.broadcast(full_tensor, src=0, group=dist.group.WORLD)
-            sharded_tensor = distribute_tensor(full_tensor, device_mesh, sharded_param.placements)
-            to_contiguous, casting_dtype = _infer_parameter_dtype(
-                model,
-                param_name,
-                full_tensor,
-            )
-            sharded_tensor = _cast_and_contiguous(sharded_tensor, to_contiguous, casting_dtype)
-            sharded_sd[param_name] = sharded_tensor
+            if torch.nn.Parameter(sharded_param) in ignored_params:
+                sharded_sd[param_name] = sharded_param
+            else:
+                device_mesh = sharded_param.device_mesh
+                full_tensor = torch.empty(sharded_param.size(), device=device_mesh.device_type, dtype=sharded_param.dtype)
+                dist.broadcast(full_tensor, src=0, group=device_mesh.get_group())
+                sharded_tensor = distribute_tensor(full_tensor, device_mesh, sharded_param.placements)
+                to_contiguous, casting_dtype = _infer_parameter_dtype(
+                    model,
+                    param_name,
+                    full_tensor,
+                )
+                sharded_tensor = _cast_and_contiguous(sharded_tensor, to_contiguous, casting_dtype)
+                sharded_sd[param_name] = sharded_tensor
 
     # we set `assign=True` because our params are on meta device
     model.load_state_dict(sharded_sd, assign=True)
