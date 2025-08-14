@@ -672,7 +672,7 @@ def fsdp2_prepare_model(accelerator, model: torch.nn.Module) -> torch.nn.Module:
         # We assume `transformers` models have a `tie_weights` method if they support it
         if hasattr(model, "tie_weights"):
             model.tie_weights()
-
+    print("after meta ignored params", fsdp2_kwargs["ignored_params"])
     auto_wrap_policy_func = fsdp2_prepare_auto_wrap_policy(fsdp2_plugin, model)
     if auto_wrap_policy_func is not None:
         # We skip the model itself, as that one is always wrapped
