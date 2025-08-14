@@ -2867,7 +2867,7 @@ class Accelerator:
                         return model.clip_grad_norm_(max_norm, norm_type)
                     else:
                         return torch.nn.utils.clip_grad_norm_(
-                            parameters, max_norm, norm_type=norm_type
+                            parameters, max_norm, norm_type=norm_type, foreach=False
                         )  # viz: https://github.com/pytorch/torchtitan/blob/main/docs/fsdp.md
         elif self.distributed_type == DistributedType.DEEPSPEED:
             # DeepSpeed handles gradient clipping internally, but we can retrieve the gradient norm
