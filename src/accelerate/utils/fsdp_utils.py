@@ -673,6 +673,7 @@ def fsdp2_prepare_model(accelerator, model: torch.nn.Module) -> torch.nn.Module:
         for module in get_module_children_bottom_up(model)[:-1]:
             if auto_wrap_policy_func(module) and not isinstance(module, FSDPModule):
                 print("wrapping:", module)
+                torch.distributed.breakpoint()
                 fully_shard(module, **fsdp2_kwargs)
                 print("wrapped done:", module)
 
