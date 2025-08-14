@@ -666,9 +666,9 @@ def fsdp2_prepare_model(accelerator, model: torch.nn.Module) -> torch.nn.Module:
         # We move the model parameters to meta device that are managed by FSDPv2, 
         # as then sharding happens on meta device
         with torch.no_grad():
-            for name, param in model.named_parameters():
+            for param in model.parameters():
                 if param not in fsdp2_kwargs["ignored_params"]:
-                    setattr(model, name, torch.nn.Parameter(param.to(torch.device("meta"))))
+                    param.data = param.to(torch.device("meta"))
         # model = model.to(torch.device("meta"))
         # We need to re-tie the weights, not exactly sure why, but if we don't do this, reference to `lm_head/embed_tokens` stay hanging -> more VRAM usage
         # We assume `transformers` models have a `tie_weights` method if they support it
