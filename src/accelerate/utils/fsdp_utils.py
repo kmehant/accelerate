@@ -637,7 +637,6 @@ def fsdp2_prepare_model(accelerator, model: torch.nn.Module) -> torch.nn.Module:
         fsdp2_kwargs["ignored_params"] = get_parameters_from_modules(
             fsdp2_plugin.ignored_modules, model, accelerator.device
         )
-
     model_has_params4bit = False
     for name, param in model.named_parameters():
         # this is a temporary fix whereby loading models with bnb params cannot be moved from
@@ -672,10 +671,7 @@ def fsdp2_prepare_model(accelerator, model: torch.nn.Module) -> torch.nn.Module:
         # We skip the model itself, as that one is always wrapped
         for module in get_module_children_bottom_up(model)[:-1]:
             if auto_wrap_policy_func(module) and not isinstance(module, FSDPModule):
-                print("wrapping:", module)
-                torch.distributed.breakpoint()
                 fully_shard(module, **fsdp2_kwargs)
-                print("wrapped done:", module)
 
     if not isinstance(model, FSDPModule):
         fully_shard(model, **fsdp2_kwargs)
