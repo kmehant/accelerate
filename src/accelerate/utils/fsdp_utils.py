@@ -502,10 +502,11 @@ def fsdp2_load_full_state_dict(accelerator, model: torch.nn.Module, full_sd: dic
         if to_contiguous:
             tensor = tensor.contiguous()
         return tensor
-    ignored_params = get_parameters_from_modules(accelerator.state.fsdp_plugin.ignored_modules, model, accelerator.device)
+    # ignored_params = get_parameters_from_modules(accelerator.state.fsdp_plugin.ignored_modules, model, accelerator.device)
+    ignored_params = {p.detach() for p in get_parameters_from_modules(accelerator.state.fsdp_plugin.ignored_modules, model, accelerator.device)}
     if accelerator.is_main_process:
         for (param_name, full_param), sharded_param in zip(full_sd.items(), meta_sharded_sd.values()):
-            if torch.nn.Parameter(sharded_param) in ignored_params:
+            if sharded_param in ignored_params:
                 sharded_sd[param_name] = sharded_param
             else:
                 device_mesh = sharded_param.device_mesh
@@ -522,7 +523,7 @@ def fsdp2_load_full_state_dict(accelerator, model: torch.nn.Module, full_sd: dic
     # We need this else to have a matching `broadcast` for all of the ranks, else we deadlock
     else:
         for param_name, sharded_param in meta_sharded_sd.items():
-            if torch.nn.Parameter(sharded_param) in ignored_params:
+            if sharded_param in ignored_params:
                 sharded_sd[param_name] = sharded_param
             else:
                 device_mesh = sharded_param.device_mesh
@@ -805,10 +806,7 @@ def fsdp2_canonicalize_names(named_params: dict) -> dict:
     named_params = {k.replace("._orig_mod", ""): v for k, v in named_params.items()}
     return named_params
 
-
-def get_parameters_from_modules(
-    modules: Union[Iterable[torch.nn.Module], str], model, device
-) -> set[torch.nn.Parameter]:
+def get_parameters_from_modules(modules: Union[Iterable[torch.nn.Module], str], model, device) -> set[torch.nn.Parameter]:
     """Converts modules to parameters where modules can be a string or list of torch.nn.Module
 
     Args:
