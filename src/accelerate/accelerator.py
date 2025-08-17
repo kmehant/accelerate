@@ -2866,9 +2866,11 @@ class Accelerator:
                     if not self.is_fsdp2:
                         return model.clip_grad_norm_(max_norm, norm_type)
                     else:
-                        return torch.nn.utils.clip_grad_norm_(
-                            parameters, max_norm, norm_type=norm_type, foreach=False
+                        _grad_norm = torch.nn.utils.clip_grad_norm_(
+                            parameters, max_norm, norm_type=norm_type
                         )  # viz: https://github.com/pytorch/torchtitan/blob/main/docs/fsdp.md
+                        if isinstance(_grad_norm, torch.distributed.tensor.DTensor):
+                            return _grad_norm.full_tensor()
         elif self.distributed_type == DistributedType.DEEPSPEED:
             # DeepSpeed handles gradient clipping internally, but we can retrieve the gradient norm
             if self.deepspeed_engine_wrapped is not None:
