@@ -515,9 +515,9 @@ def fsdp2_load_full_state_dict(accelerator, model: torch.nn.Module, full_sd: dic
                 full_param = full_param.detach().to(device_mesh.device_type)
                 if device_mesh.ndim > 1:
                     for mesh_dim_name in device_mesh.mesh_dim_names:
-                        dist.broadcast(full_tensor, src=0, group=device_mesh.get_group(mesh_dim=mesh_dim_name))
+                        dist.broadcast(full_param, src=0, group=device_mesh.get_group(mesh_dim=mesh_dim_name))
                 else:
-                    dist.broadcast(full_tensor, src=0, group=device_mesh.get_group())
+                    dist.broadcast(full_param, src=0, group=device_mesh.get_group())
                 sharded_tensor = distribute_tensor(full_param, device_mesh, sharded_param.placements)
                 to_contiguous, casting_dtype = _infer_parameter_dtype(
                     model,
