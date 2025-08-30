@@ -1640,6 +1640,7 @@ class FullyShardedDataParallelPlugin:
             str,
             "torch.distributed.fsdp.MixedPrecision",
             "torch.distributed.fsdp.MixedPrecisionPolicy",
+            str,
         ]
     ] = field(
         default=None,
