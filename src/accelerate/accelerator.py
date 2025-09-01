@@ -1638,7 +1638,6 @@ class Accelerator:
 
         # Second pass: prepare schedulers
         result = [self._prepare_one(obj) if not isinstance(obj, torch.nn.Module) else obj for obj in result]
-        torch.distributed.breakpoint()
         # Prepare the model
         model_index, model = None, None
         for i, obj in enumerate(result):

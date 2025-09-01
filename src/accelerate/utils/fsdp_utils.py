@@ -685,7 +685,7 @@ def fsdp2_prepare_model(accelerator, model: torch.nn.Module) -> torch.nn.Module:
                     if param not in fsdp2_kwargs["ignored_params"]:
                         # Create new parameter on meta device
                         meta_param = torch.nn.Parameter(
-                            torch.empty(param.shape, dtype=param.dtype, device="meta")
+                            torch.empty(param.shape, dtype=param.dtype, device="meta"), requires_grad=param.requires_grad
                         )
                         setattr(module, param_name, meta_param)
         # model = model.to(torch.device("meta"))
