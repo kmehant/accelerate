@@ -693,6 +693,7 @@ def fsdp2_prepare_model(accelerator, model: torch.nn.Module) -> torch.nn.Module:
         # We assume `transformers` models have a `tie_weights` method if they support it
         if hasattr(model, "tie_weights"):
             model.tie_weights()
+
     auto_wrap_policy_func = fsdp2_prepare_auto_wrap_policy(fsdp2_plugin, model)
     if auto_wrap_policy_func is not None:
         # We skip the model itself, as that one is always wrapped
@@ -826,7 +827,9 @@ def fsdp2_canonicalize_names(named_params: dict) -> dict:
     named_params = {k.replace("._orig_mod", ""): v for k, v in named_params.items()}
     return named_params
 
-def get_parameters_from_modules(modules: Union[Iterable[torch.nn.Module], str], model, device) -> set[torch.nn.Parameter]:
+def get_parameters_from_modules(
+    modules: Union[Iterable[torch.nn.Module], str], model, device
+) -> set[torch.nn.Parameter]:
     """Converts modules to parameters where modules can be a string or list of torch.nn.Module
     Args:
         modules (`Union[Iterable[torch.nn.Module], str]`): List of modules
