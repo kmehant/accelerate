@@ -550,6 +550,12 @@ def launch_command_parser(subparsers=None):
         help="FSDP's Reshard After Forward Strategy. (useful only when `use_fsdp` flag is passed). Supports either boolean (FSDP2) or `FULL_SHARD | SHARD_GRAD_OP | NO_RESHARD` (FSDP1).",
     )
     fsdp_args.add_argument(
+        "--fsdp_mixed_precision_policy",
+        type=str,
+        default=None,
+        help="FSDP2 mixed precision policy",
+    )
+    fsdp_args.add_argument(
         "--fsdp_auto_wrap_policy",
         type=str,
         default=None,
