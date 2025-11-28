@@ -774,6 +774,13 @@ class DataLoaderDispatcher(DataLoaderAdapter, DataLoaderStateMixin):
         self.submesh_tp = None
         self.submesh_dp = None
         self.submesh_fsdp = None
+        self.submesh_cp = None
+        if self.torch_device_mesh and "cp" in self.torch_device_mesh.mesh_dim_names:
+            # cp group
+            # left over is always dp
+            self.submesh_cp = self.torch_device_mesh["cp"]
+            if "tp" in self.torch_device_mesh.mesh_dim_names:
+                raise ValueError("TP + CP combinations not yet supported in dispatch mode")
         if self.torch_device_mesh and "tp" in self.torch_device_mesh.mesh_dim_names:
             self.submesh_tp = self.torch_device_mesh["tp"]
             if "dp" in self.torch_device_mesh.mesh_dim_names:
@@ -804,11 +811,21 @@ class DataLoaderDispatcher(DataLoaderAdapter, DataLoaderStateMixin):
                             "otherwise, use dispatch_batches=True instead."
                         )
                     self._update_state_dict()
+                    if self.submesh_cp:
+                        raise ValueError("split_batch mode is not supported for CP")
                     batch = next(iterator)
                 else:
                     # num_processes batches of the main iterator are concatenated then dispatched and split.
                     # We add the batches one by one so we have the remainder available when drop_last=False.
                     batches = []
+                    if self.submesh_cp:
+                        cp_degree = self.submesh_cp.size()
+                        dp_degree = self.torch_device_mesh.size() / cp_degree
+                        for _ in range(dp_degree):
+                            self._update_state_dict()
+                            batch = next(iterator)
+                            for _ in range(cp_degree):
+                                batches.append(batch)
                     if self.submesh_tp:
                         # when tp, extract single batch and then replicate
                         self._update_state_dict()
