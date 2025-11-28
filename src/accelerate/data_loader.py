@@ -811,9 +811,20 @@ class DataLoaderDispatcher(DataLoaderAdapter, DataLoaderStateMixin):
                             "otherwise, use dispatch_batches=True instead."
                         )
                     self._update_state_dict()
-                    if self.submesh_cp:
-                        raise ValueError("split_batch mode is not supported for CP")
                     batch = next(iterator)
+                    # for cp, per device batch size has to be dp per device batch size
+                    if self.submesh_cp:
+                        cp_degree = self.submesh_cp.size()
+                        dp_degree = self.torch_device_mesh.size() // cp_degree
+                        number_of_samples_in_ebs = find_batch_size(batch)
+                        number_of_samples_per_dp_group = number_of_samples_in_ebs // dp_degree
+                        batches = []
+                        for i in range(dp_degree):
+                            portion = slice(i*number_of_samples_per_dp_group, (i+1) * number_of_samples_per_dp_group)
+                            dp_batch = self.slice_fn(batch,portion)
+                            for _ in range(cp_degree):
+                                batches.append(dp_batch)
+                        batch = concatenate(batches, dim=0)
                 else:
                     # num_processes batches of the main iterator are concatenated then dispatched and split.
                     # We add the batches one by one so we have the remainder available when drop_last=False.
