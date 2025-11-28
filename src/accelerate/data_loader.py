@@ -820,7 +820,7 @@ class DataLoaderDispatcher(DataLoaderAdapter, DataLoaderStateMixin):
                     batches = []
                     if self.submesh_cp:
                         cp_degree = self.submesh_cp.size()
-                        dp_degree = self.torch_device_mesh.size() / cp_degree
+                        dp_degree = self.torch_device_mesh.size() // cp_degree
                         for _ in range(dp_degree):
                             self._update_state_dict()
                             batch = next(iterator)
